@@ -1,44 +1,65 @@
 import React, { Component } from "react";
 import Header from "./Header";
-import Image from "./Image";
-import axios from "axios";
+import Gallery from "./Gallery";
+import Details from "./Details";
+import { getAllData, getData, objectDefaults } from './utils';
+
+
 
 class App extends Component {
   constructor() {
     super();
-
     this.state = {
-      image: null,
-      loading: false,
+      album: null,
+      viewDetails: null,
+      showLargeImage: false,
+      showInputFields: false,
+      likes: objectDefaults(1, 12)
     }
-
-    this.getImage = this.getImage.bind(this);
   }
 
-  componentWillMount() {
-    this.getImage();
+  componentDidMount() {
+    getAllData().then(album => this.setState(() => ({ album })))
   }
 
-  getImage() {
-    this.setState({
-      loading: true
-    });
+  handleLikeClick = (id) => {
+    this.setState((prevState) => ({
+      likes: {...prevState.likes, [id]: prevState.likes[id] + 1 }
+    }));
+  }
 
-    axios.get("http://www.splashbase.co/api/v1/images/random")
-      .then((response) => {
-        // set image data to state
-        this.setState({
-          image: response.data.url,
-          loading: false
-        });
-      });
+  handleCommentClick = () => {
+    this.setState((prevState) => ({ showInputFields: !prevState.showInputFields }));
+  }
+
+  handleViewClick = (id) => {
+    getData(id).then(details => this.setState(() => ({ 
+      viewDetails: details,
+      showLargeImage: true,
+    })));
+  }
+
+  handleBackClick = () => {
+    this.setState(() => ({ showLargeImage: false, showInputFields: false }));
   }
 
   render() {
     return (
       <div>
-        <Header getImage={this.getImage} />
-        <Image imageUrl={this.state.image} loading={this.state.loading} />
+        <Header />
+        <Gallery
+          handleViewClick={this.handleViewClick}
+          handleLikeClick={this.handleLikeClick}
+          likes={this.state.likes}
+          album={this.state.album} />
+        {this.state.showLargeImage && 
+          <Details 
+            likes={this.state.likes}
+            imageDetails={this.state.viewDetails}
+            handleBackClick={this.handleBackClick}
+            handleLikeClick={this.handleLikeClick}
+            handleCommentClick={this.handleCommentClick}
+            showInputFields={this.state.showInputFields} />}
       </div>
     );
   }
