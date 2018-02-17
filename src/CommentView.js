@@ -1,47 +1,34 @@
 import React, { Component } from "react";
+import { connect } from 'react-redux';
+import * as actions from "./actions";
+import { bindActionCreators } from "../../../Library/Caches/typescript/2.6/node_modules/redux";
 
-class CommentView extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      comments: []
-    }
-  }
-
-  submitComment = (e) => {
-    if (e.key === 'Enter') {
-      this.setState((prevState) => ({ 
-        comments: [...prevState.comments, { author: this.author.value, comment: this.comment.value }] 
-      }), () => {
-        this.author.value = '';
-        this.comment.value = '';
-      })
-    }
-  }
-
-  render() {
-    const { comments } = this.state;
-    const { inputStyle } = styles;
-    return (
-      <div>
-        <input
-          style={inputStyle} 
-          type="text" 
-          placeholder="author" 
-          ref={val => this.author = val} 
-          onKeyPress={this.submitComment} />
-        <input
-          style={inputStyle} 
-          type="text" 
-          placeholder="comment" 
-          ref={val => this.comment = val} 
-          onKeyPress={this.submitComment}/>
-        { comments.map(({ author, comment }) => <div key={`${comment}${author}`} style={{ fontSize: 14 }}>
-            <span style={{ color: '#5792f2' }}>{author}</span>: {comment}
-          </div>) }
-      </div>
-    );
-  }
+const CommentView = (props) => {
+  const { comments } = props;
+  let authorEntry, commentEntry;
+  const { inputStyle } = styles;
+  return (
+    <div>
+      <input
+        style={inputStyle} 
+        type="text" 
+        placeholder="author" 
+        ref={val => authorEntry = val} 
+        onKeyPress={(e) => e.key=== 'Enter'
+        && props.actions.addComment(authorEntry.value, commentEntry.value)} />
+      <input
+        style={inputStyle} 
+        type="text" 
+        placeholder="comment" 
+        ref={val => commentEntry = val} 
+        onKeyPress={
+          (e) => e.key=== 'Enter' 
+          && props.actions.addComment(authorEntry.value, commentEntry.value)} />
+      { comments.map(({ author, comment }) => <div key={`${comment}${author}`} style={{ fontSize: 14 }}>
+          <span style={{ color: '#5792f2' }}>{author}</span>: {comment}
+        </div>) }
+    </div>
+  );
 }
 
 const styles = {
@@ -53,4 +40,17 @@ const styles = {
   }
 }
 
-export default CommentView;
+const mapStateToProps = (state) => {
+  return {
+    comments: state.comments
+  }
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    actions: bindActionCreators(actions, dispatch)
+  }
+}
+
+const CommentViewContainer = connect(mapStateToProps, mapDispatchToProps)(CommentView);
+export default CommentViewContainer;
